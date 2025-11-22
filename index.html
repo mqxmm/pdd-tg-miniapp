@@ -52,8 +52,10 @@
       document.getElementById("question").innerText = q.question;
 
       const img = document.getElementById("qimg");
-      if (q.image && q.image !== "./images/no_image.jpg") {
-        img.src = q.image.replace('./images/', '/images/');
+      if (q.image && !q.image.includes("no_image.jpg")) {
+        // Заменяем ./images/ на /images/A_B/
+        const realPath = q.image.replace('./images/', '/images/A_B/');
+        img.src = realPath;
         img.style.display = 'block';
       } else {
         img.style.display = 'none';
@@ -85,7 +87,7 @@
         document.getElementById("tip").innerHTML = (q.answer_tip || '').replace(/\n/g, '<br>');
         document.getElementById("tip").style.display = 'block';
       }, 600);
-    };
+    }
 
     function nextQuestion() {
       if (!answered) return alert("Выберите ответ!");
@@ -95,7 +97,7 @@
     }
 
     function finishTicket() {
-      const text = correct >= 18 ? `СДАНО! ✅ ${correct}/20` : `НЕ СДАНО ❌ ${correct}/20 (нужно ≥18)`;
+      const text = correct >= 18 ? `СДАНО! ✅ ${correct}/20` : `НЕ СДАНО ❌ ${correct}/20`;
       document.getElementById("result").innerHTML = `<div>${text}</div><div>Ошибок: ${20 - correct}</div>`;
       Telegram.WebApp.MainButton.setText("Новый билет").show().onClick(() => {
         currentTicket = (currentTicket + 1) % 40;
