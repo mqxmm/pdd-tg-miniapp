@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Билеты ПДД 2025</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body{font-family:Arial;margin:0;padding:20px;background:#0e1626;color:#fff;text-align:center}
+    h1{margin:10px 0 20px;font-size:24px}
+    #progress{font-size:18px;margin:15px}
+    #question{font-size:20px;margin:30px 10px;line-height:1.4}
+    .ans{background:#1e2a44;margin:12px;padding:16px;border-radius:12px;cursor:pointer}
+    .ans:hover{background:#2a3a66}
+    .correct{background:#0f8519!important}
+    .wrong{background:#c42b1c!important}
+    #result{font-size:26px;margin:30px;font-weight:bold}
+    button{padding:14px 30px;margin:10px;background:#007bff;color:#fff;border:none;border-radius:10px;font-size:18px}
+  </style>
+</head>
+<body>
+  <h1>Билеты ПДД 2025</h1>
+  <div id="progress">Билет <span id="ticket">1</span>/40 · Вопрос <span id="qnum">1</span>/20</div>
+  <div id="question"></div>
+  <div id="answers"></div>
+  <div id="result"></div>
+  <button onclick="nextQuestion()">Следующий →</button>
+  <button onclick="finishTicket()">Завершить билет</button>
+
+  <script>
+    Telegram.WebApp.ready(); Telegram.WebApp.expand();
+    const user = Telegram.WebApp.initDataUnsafe.user || {first_name:"Гость"};
+
+    // Все 800 вопросов (40 билетов × 20) — сокращённая версия для примера
+    const tickets = [
+      [ // Билет 1
+        {q:"Разрешено ли движение задним ходом на перекрестке?", a:["Да","Нет"], c:1},
+        {q:"Кто должен уступить дорогу при одновременном перестроении?", a:["Тот, у кого помеха справа","Тот, кто перестраивается слева"], c:0},
+        {q:"Где разрешена остановка на автомагистрали?", a:["Только на специальных площадках","В любом месте"], c:0},
+        {q:"Что означает мигающий жёлтый сигнал светофора?", a:["Разрешает движение с осторожностью","Запрещает движение"], c:0},
+        {q:"Разрешён ли обгон на пешеходном переходе?", a:["Да","Нет"], c:1},
+        // Добавь ещё 15 вопросов в каждый билет сам (все 800 легко скопировать из открытых JSON)
+      ],
+      // Билеты 2–40 — аналогично добавь массивы
+    ];
+    for(let i=1;i<40;i++) tickets[i]=tickets[0]; // временно копируем билет 1
+
+    let currentTicket = 0, currentQuestion = 0, correct = 0, answered = false;
+
+    function loadQuestion(){
+      const t = tickets[currentTicket];
+      const q = t[currentQuestion];
+      document.getElementById("ticket").innerText = currentTicket+1;
+      document.getElementById("qnum").innerText = currentQuestion+1;
+      document.getElementById("question").innerHTML = q.q;
+      document.getElementById("answers").innerHTML = q.a.map((ans,i)=>
+        `<div class="ans" onclick="check(${i})">${ans}</div>`
+      ).join("");
+      document.getElementById("result").innerText = "";
+      answered = false;
+    }
+
+    function check(selected){
+      if(answered) return;
+      answered = true;
+      const q = tickets[currentTicket][currentQuestion];
+      const answers = document.querySelectorAll(".ans");
+      answers.forEach((el,i)=>{
+        el.className = i===q.c ? "ans correct" : i===selected ? "ans wrong" : "ans";
+      });
+      if(selected===q.c) correct++;
+      setTimeout(()=>{},1500);
+    }
+
+    function nextQuestion(){
+      if(!answered) return alert("Выбери ответ!");
+      currentQuestion++;
+      if(currentQuestion >= 20){
+        finishTicket();
+      }else{
+        loadQuestion();
+      }
+    }
+
+    function finishTicket(){
+      const percent = Math.round(correct/20*100);
+      const text = correct>=18 ? `Сдано! ${correct}/20` : `Не сдано (${correct}/20)`;
+      document.getElementById("result").innerHTML = `<div>${text}<br>Ошибок: ${20-correct}</div>`;
+      Telegram.WebApp.MainButton.setText("Новый билет").show().onClick(()=>{
+        currentTicket = (currentTicket+1)%40;
+        currentQuestion = 0; correct = 0;
+        loadQuestion();
+        Telegram.WebApp.MainButton.hide();
+      });
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
