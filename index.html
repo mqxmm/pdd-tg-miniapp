@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Билеты ПДД 2025</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
   <style>
     body{font-family:Arial;margin:0;padding:20px;background:#0e1626;color:#fff;text-align:center}
     h1{font-size:24px;margin:10px 0 20px}
@@ -21,123 +20,77 @@
     #tip{display:none;background:#fff;color:#000;padding:10px;border-radius:10px;margin:10px;text-align:left}
   </style>
 </head>
-
 <body>
   <h1>Билеты ПДД 2025</h1>
-
-  <div id="progress">
-    Билет <span id="ticket">1</span>/40 · Вопрос <span id="qnum">1</span>/20
-  </div>
-
-  <button onclick="startExam()" style="background:#28a745">Экзамен</button>
-
+  <div id="progress">Билет <span id="ticket">1</span>/40 · Вопрос <span id="qnum">1</span>/20</div>
   <div id="question"></div>
   <img id="qimg" style="display:none">
   <div id="answers"></div>
   <div id="result"></div>
   <div id="tip"></div>
-
   <button onclick="nextQuestion()">Следующий →</button>
-  <button onclick="finishTicket()">Завершить</button>
+  <button onclick="finishTicket()">Завершить билет</button>
 
   <script>
-    Telegram.WebApp.ready();
+    Telegram.WebApp.ready(); Telegram.WebApp.expand();
 
-    let tickets = [];
-    let currentTicket = 0;
-    let currentQuestion = 0;
-    let correct = 0;
-    let answered = false;
+    let tickets = [], currentTicket = 0, currentQuestion = 0, correct = 0, answered = false;
+    const baseURL = '/images/'; // Vercel: /public/images/ → /images/
 
-    // режим экзамена
-    let examMode = false;
-    let examQuestions = [];
-
-    const baseURL = "https://raw.githubusercontent.com/etspring/pdd_russia/master/";
-
+    // Загружаем билеты 1-40 асинхронно
     async function loadTickets() {
       tickets = [];
-
-      for (let t = 1; t <= 40; t++) {
+      for (let i = 1; i <= 40; i++) {
         try {
-          const url = `${baseURL}tickets/${t}.json`;
-          const res = await fetch(url);
-          let arr = await res.json();
-
-          const normalized = arr.map(q => ({
-            question: q.question,
-            answers: q.answers.map(a => ({
-              answer_text: a.answer_text || a.text || a.answer || "",
-              is_correct: a.is_correct
-            })),
-            image: q.image ? q.image.replace(/^\.?\/*/, "") : null,
-            answer_tip: q.answer_tip || q.correct_answer || ""
-          }));
-
-          tickets.push(normalized);
-        } catch (e) {
-          console.error("Ошибка загрузки билета", t);
-        }
+          const res = await fetch(`/tickets/${i}.json`);
+          tickets.push(await res.json()); // Массив вопросов
+        } catch (e) { console.error(`Билет ${i} не загружен`); }
       }
-
-      loadQuestion();
+      if (tickets.length) loadQuestion();
     }
 
     function loadQuestion() {
-      const qData = examMode
-        ? examQuestions[currentQuestion]
-        : tickets[currentTicket][currentQuestion];
-
-      document.getElementById("ticket").innerText = examMode ? "-" : currentTicket + 1;
+      if (!tickets.length) return;
+      const qData = tickets[currentTicket][currentQuestion];
+      document.getElementById("ticket").innerText = currentTicket + 1;
       document.getElementById("qnum").innerText = currentQuestion + 1;
       document.getElementById("question").innerHTML = qData.question;
-
       const img = document.getElementById("qimg");
       if (qData.image) {
-        img.src = baseURL + qData.image;
-        img.style.display = "block";
+        let imgPath = qData.image.replace('./images/', baseURL);
+        img.src = imgPath;
+        img.style.display = 'block';
       } else {
-        img.style.display = "none";
+        img.style.display = 'none';
       }
-
-      document.getElementById("answers").innerHTML = qData.answers
-        .map((a, i) => `<div class="ans" onclick="check(${i})">${a.answer_text}</div>`)
-        .join("");
-
+      document.getElementById("answers").innerHTML = qData.answers.map((a, i) =>
+        `<div class="ans" onclick="check(${i})">${a.answer_text}</div>`
+      ).join("");
       document.getElementById("result").innerText = "";
-      document.getElementById("tip").style.display = "none";
+      document.getElementById("tip").style.display = 'none';
       answered = false;
     }
 
     window.check = function(selected) {
       if (answered) return;
       answered = true;
-
-      const qData = examMode
-        ? examQuestions[currentQuestion]
-        : tickets[currentTicket][currentQuestion];
-
+      const qData = tickets[currentTicket][currentQuestion];
       const answers = document.querySelectorAll(".ans");
-      const corr = qData.answers.findIndex(a => a.is_correct);
-
+      let corrIndex = qData.answers.findIndex(a => a.is_correct);
       answers.forEach((el, i) => {
-        if (i === corr) el.classList.add("correct");
+        if (i === corrIndex) el.classList.add("correct");
         else if (i === selected) el.classList.add("wrong");
       });
-
-      if (selected === corr) correct++;
-
+      if (selected === corrIndex) correct++;
       setTimeout(() => {
-        document.getElementById("tip").innerText = qData.answer_tip;
-        document.getElementById("tip").style.display = "block";
-      }, 400);
-    };
+        document.getElementById("tip").innerText = qData.answer_tip || qData.correct_answer || '';
+        document.getElementById("tip").style.display = 'block';
+      }, 500);
+    }
 
     function nextQuestion() {
       if (!answered) return alert("Выберите ответ!");
-
       currentQuestion++;
-
       if (currentQuestion >= 20) {
         finishTicket();
       } else {
@@ -146,54 +99,15 @@
     }
 
     function finishTicket() {
-      const text = correct >= 18
-        ? `СДАНО! ${correct}/20`
-        : `НЕ СДАНО ${correct}/20 (нужно 18+)`;
-
-      document.getElementById("result").innerHTML =
-        `<div>${text}</div><div>Ошибок: ${20 - correct}</div>`;
-
-      Telegram.WebApp.MainButton
-        .setText(examMode ? "Снова экзамен" : "Новый билет")
-        .show()
-        .onClick(() => {
-          Telegram.WebApp.MainButton.hide();
-
-          if (examMode) {
-            startExam();
-          } else {
-            currentTicket = (currentTicket + 1) % 40;
-            currentQuestion = 0;
-            correct = 0;
-            loadQuestion();
-          }
-        });
-    }
-
-    // ---------------------------
-    //       РЕЖИМ ЭКЗАМЕНА
-    // ---------------------------
-    function startExam() {
-      examMode = true;
-      examQuestions = [];
-      correct = 0;
-      currentQuestion = 0;
-
-      // собираем все вопросы из всех билетов
-      let all = [];
-      for (let t = 0; t < tickets.length; t++) {
-        for (let q = 0; q < tickets[t].length; q++) {
-          all.push(tickets[t][q]);
-        }
-      }
-
-      // перемешиваем
-      all.sort(() => Math.random() - 0.5);
-
-      // выбираем 20 случайных
-      examQuestions = all.slice(0, 20);
-
-      loadQuestion();
+      const percent = Math.round(correct / 20 * 100);
+      const text = correct >= 18 ? `СДАНО! ✅ ${correct}/20` : `НЕ СДАНО ❌ ${correct}/20 (нужно ≥18)`;
+      document.getElementById("result").innerHTML = `<div>${text}</div><div>Ошибок: ${20 - correct}</div>`;
+      Telegram.WebApp.MainButton.setText("Новый билет").show().onClick(() => {
+        currentTicket = (currentTicket + 1) % 40;
+        currentQuestion = 0; correct = 0;
+        Telegram.WebApp.MainButton.hide();
+        loadQuestion();
+      });
     }
 
     loadTickets();
