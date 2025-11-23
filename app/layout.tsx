@@ -1,7 +1,11 @@
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="ru">
-      <body style={{ margin: 0, background: '#1e293b', color: 'white', fontFamily: 'system-ui' }}>
+      <body className="bg-slate-800 text-white min-h-screen">
         {children}
         <script
           dangerouslySetInnerHTML={{
@@ -9,9 +13,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               if (window.Telegram?.WebApp) {
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
-                document.body.style.background = '#1e293b';
               }
-            `
+            `,
           }}
         />
       </body>
