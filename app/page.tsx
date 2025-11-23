@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import BottomNav from '@/components/BottomNav';
+import BottomNav from '../components/BottomNav';
 import AllQuestions from './screens/AllQuestions';
 import ExamMode from './screens/ExamMode';
 import Stats from './screens/Stats';

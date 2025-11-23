@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { useEffect } from "react";
 
 export const metadata: Metadata = {
-  title: "ПДД Россия 2025",
-  description: "Подготовка к экзамену ПДД",
+  title: "ПДД 2025",
+  description: "Подготовка к экзамену ПДД A/B"
 };
 
 export default function RootLayout({
@@ -20,10 +19,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
               }
-            `,
+            `
           }}
         />
       </body>

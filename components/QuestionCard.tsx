@@ -3,12 +3,11 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
-type Answer = { answer_text: string; is_correct: boolean };
 type Question = {
   id: string;
   question: string;
   image?: string;
-  answers: Answer[];
+  answers: { answer_text: string; is_correct: boolean }[];
   correct_answer: string;
   answer_tip: string;
 };
@@ -17,7 +16,7 @@ export default function QuestionCard({ q, onAnswer }: { q: Question; onAnswer: (
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
 
-  const handleAnswer = () => {
+  const handle = () => {
     if (selected === null) return;
     const correct = q.answers[selected].is_correct;
     onAnswer(correct);
@@ -26,13 +25,13 @@ export default function QuestionCard({ q, onAnswer }: { q: Question; onAnswer: (
 
   return (
     <div className="bg-gray-800 rounded-lg p-5">
-      {q.image && q.image.includes('no_image') === false && (
-        <div className="relative h-64 mb-4">
-          <Image src={q.image} alt="" fill className="object-contain" />
+      {q.image && !q.image.includes('no_image') && (
+        <div className="relative h-64 mb-6">
+          <Image src={q.image} alt="Вопрос" fill className="object-contain" />
         </div>
       )}
 
-      <h3 className="text-lg font-bold mb-4">{q.question}</h3>
+      <h3 className="text-lg font-bold mb-6">{q.question}</h3>
 
       <div className="space-y-3">
         {q.answers.map((a, i) => (
@@ -40,7 +39,7 @@ export default function QuestionCard({ q, onAnswer }: { q: Question; onAnswer: (
             key={i}
             disabled={revealed}
             onClick={() => setSelected(i)}
-            className={`w-full text-left p-4 rounded-lg border-2 transition
+            className={`w-full text-left p-4 rounded-lg border-2 transition-all
               ${selected === i
                 ? revealed
                   ? a.is_correct ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'
@@ -54,14 +53,14 @@ export default function QuestionCard({ q, onAnswer }: { q: Question; onAnswer: (
       </div>
 
       {revealed && (
-        <div className="mt-6 p-4 bg-gray-700 rounded">
+        <div className="mt-6 p-5 bg-gray-700 rounded-lg">
           <p className="text-green-400 font-bold">{q.correct_answer}</p>
-          <p className="text-sm mt-2">{q.answer_tip}</p>
+          <p className="text-sm mt-3 opacity-90">{q.answer_tip}</p>
         </div>
       )}
 
       {!revealed && selected !== null && (
-        <button onClick={handleAnswer} className="mt-6 w-full bg-blue-600 py-3 rounded-lg">
+        <button onClick={handle} className="mt-8 w-full bg-blue-600 py-4 rounded-lg font-medium">
           Ответить
         </button>
       )}
