@@ -10,16 +10,22 @@ export default function ExamMode() {
   const [correctCount, setCorrectCount] = useState(0);
 
   useEffect(() => {
+    // Случайный билет от 1 до 40 с русским именем
     const num = Math.floor(Math.random() * 40) + 1;
-    fetch(`/tickets/ticket_${num.toString().padStart(2, '0')}.json`)
-      .then(r => r.json())
-      .then(setTicket);
+    const fileName = `Билет ${num}.json`;
+    fetch(`/tickets/${encodeURIComponent(fileName)}`)
+      .then(r => {
+        if (!r.ok) throw new Error('Не найден');
+        return r.json();
+      })
+      .then(setTicket)
+      .catch(() => alert('Билет не загружен. Проверь папку public/tickets'));
   }, []);
 
   const handleAnswer = (correct: boolean) => {
     saveAnswer(ticket[current].id, correct);
     if (correct) setCorrectCount(c => c + 1);
-    if (current < 39) {
+    if (current < ticket.length - 1) {
       setTimeout(() => setCurrent(c => c + 1), 1800);
     }
   };
@@ -29,12 +35,12 @@ export default function ExamMode() {
   return (
     <div className="max-w-2xl mx-auto px-4 pt-6">
       <div className="text-center mb-6 text-lg font-medium">
-        Вопрос {current + 1}/40 | Правильных: {correctCount}
+        Билет {ticket[0]?.ticket_number?.replace('Билет ', '')} • Вопрос {current + 1}/{ticket.length} • Правильных: {correctCount}
       </div>
       <QuestionCard q={ticket[current]} onAnswer={handleAnswer} />
-      {current === 39 && (
+      {current === ticket.length - 1 && (
         <div className="text-center mt-10 text-2xl font-bold text-green-400">
-          Экзамен завершён! {correctCount + (ticket[39].answers.find((a: any) => a.is_correct)?.is_correct ? 1 : 0)}/40
+          Экзамен завершён! {correctCount}/40
         </div>
       )}
     </div>
