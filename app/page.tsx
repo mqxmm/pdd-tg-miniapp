@@ -1,22 +1,41 @@
 'use client';
 
-import { useState } from 'react';
-import BottomNav from '../components/BottomNav';
-import AllQuestions from './screens/AllQuestions';
-import ExamMode from './screens/ExamMode';
-import Stats from './screens/Stats';
-import Settings from './screens/Settings';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
-  const [screen, setScreen] = useState<'all' | 'exam' | 'stats' | 'settings'>('exam');
+  const [user, setUser] = useState('Гость');
+
+  useEffect(() => {
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+      setUser(Telegram.WebApp.initDataUnsafe.user.first_name || 'Друг');
+    }
+  }, []);
 
   return (
-    <div className="pb-20">
-      {screen === 'all' && <AllQuestions />}
-      {screen === 'exam' && <ExamMode />}
-      {screen === 'stats' && <Stats />}
-      {screen === 'settings' && <Settings />}
-      <BottomNav current={screen} onChange={setScreen} />
+    <div style={{ padding: '20px', textAlign: 'center', minHeight: '100vh' }}>
+      <h1 style={{ fontSize: '28px', marginBottom: '20px' }}>ПДД Тест</h1>
+      <p style={{ fontSize: '20px' }}>Привет, {user}!</p>
+      <div style={{ marginTop: '40px', padding: '20px', background: '#334155', borderRadius: '12px' }}>
+        <h2>Мини-апп работает!</h2>
+        <p>Vercel — ✅</p>
+        <p>Telegram WebApp — ✅</p>
+        <p>Готов к билетам ПДД!</p>
+      </div>
+      <button 
+        onClick={() => alert('Скоро будут билеты!')}
+        style={{
+          marginTop: '30px',
+          padding: '15px 30px',
+          background: '#10b981',
+          color: 'white',
+          border: 'none',
+          borderRadius: '12px',
+          fontSize: '18px',
+          cursor: 'pointer'
+        }}
+      >
+        Начать экзамен
+      </button>
     </div>
   );
 }
